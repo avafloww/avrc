@@ -1,0 +1,42 @@
+# This is a development docker-compose file for AVRC's application.
+# Please note that this is not suitable for production use; in particular,
+# the database is not configured to be persistent, and secure passwords
+# are not used.
+version: '3.8'
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_PASSWORD: postgres
+    ports:
+      # Expose the database on port 5432 locally for development purposes.
+      # Note: this is an insecure configuration, and should not be used
+      #       in production!
+      - 5432:5432
+    networks:
+      - app
+  app:
+    build: .
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/postgres
+    ports:
+      # In production, you would probably want to use a reverse proxy
+      # to serve the application over HTTPS. For development purposes,
+      # we just expose the application directly on port 3000.
+      - 3000:3000
+    volumes:
+      - .:/app
+      # Transient volumes for built code and dependencies.
+      - remix_cache:/app/.cache/
+      - remix_build:/app/build/
+      - node_modules:/app/node_modules/
+    depends_on:
+      - db
+    networks:
+      - app
+networks:
+  app:
+volumes:
+  remix_cache:
+  remix_build:
+  node_modules:
